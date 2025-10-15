@@ -107,19 +107,34 @@ class UserSignupView(generics.CreateAPIView):
 
 
 
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import serializers
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    role = serializers.CharField(write_only=True)  # Accept role in request
+
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-
-        # extra fields you want in response
+        # Add custom claims
         token["full_name"] = user.full_name
         token["email_address"] = user.email_address
         token["role"] = user.role
         return token
 
     def validate(self, attrs):
+        # Get role from request
+        role = attrs.pop('role', None)
+
+        # First validate email/password
         data = super().validate(attrs)
+
+        # Check role matches
+        if role and self.user.role != role:
+            raise serializers.ValidationError({"role": "Invalid role for this user."})
+
+        # Add user info to response
         data.update({
             "user": {
                 "id": self.user.id,
@@ -128,7 +143,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 "role": self.user.role
             }
         })
+
         return data
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -145,7 +162,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             key="access_token",
             value=access,
             httponly=True,
-            secure=False,   # ❌ set True in production with HTTPS
+            secure=True,   # set True in production
             samesite="Strict",
             max_age=300,    # 5 mins
         )
@@ -153,16 +170,17 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             key="refresh_token",
             value=refresh,
             httponly=True,
-            secure=False,
+            secure=True,
             samesite="Strict",
             max_age=7*24*60*60,  # 7 days
         )
 
-        # You can remove tokens from response body if you want
+        # Remove tokens from response body
         del response.data["access"]
         del response.data["refresh"]
 
         return response
+
 
 class CookieTokenRefreshView(APIView):
     def post(self, request):
