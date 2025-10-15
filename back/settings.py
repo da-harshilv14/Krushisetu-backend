@@ -109,7 +109,6 @@ CORS_ALLOW_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
-    "https://krushisetu-backend-production-4a02.up.railway.app",
 ]
 WSGI_APPLICATION = 'back.wsgi.application'
 
