@@ -18,11 +18,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-@api_view(['POST'])
-def information(request):
- conn = sqlite3.connect('db.sqlite3')
- cursor = conn.cursor()
- email = request.data.get('email')
- cursor.execute("SELECT * FROM db.sqlite3 WHERE email = ?", (email,))
- rows = cursor.fetchall()
- return Response({f'{rows}'}, status=status.HTTP_200_OK)
+# @api_view(['POST'])
+# def information(request):
+#  conn = sqlite3.connect('db.sqlite3')
+#  cursor = conn.cursor()
+#  email = request.data.get('email')
+#  cursor.execute("SELECT * FROM db.sqlite3 WHERE email = ?", (email,))
+#  rows = cursor.fetchall()
+#  return Response({f'{rows}'}, status=status.HTTP_200_OK)
