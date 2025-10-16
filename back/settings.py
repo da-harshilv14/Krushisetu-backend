@@ -94,8 +94,10 @@ TEMPLATES = [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
    
-    "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
+    #"http://127.0.0.1:8000",
+    #"http://localhost:5173",
     "https://krushisetu-backend-production-4a02.up.railway.app",
+    "https://krushisetufrontend.vercel.app",
 ]
 
 # If testing, you can allow all (not safe for prod)
@@ -107,7 +109,7 @@ CORS_ALLOW_HEADERS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
+    "https://krushisetufrontend.vercel.app/",
 ]
 WSGI_APPLICATION = 'back.wsgi.application'
 

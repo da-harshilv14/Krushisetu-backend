@@ -1,12 +1,16 @@
 from rest_framework import generics
 from .models import User
 from django.http import HttpResponse
-from django.template.loader import render_to_string
+
 from .serializers import UserSignupSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework.response import Response
+from django.conf import settings
 from rest_framework.views import APIView
+from rest_framework import status
 from django.contrib.auth import authenticate
 from .otp_utils import send_otp_sms, verify_otp_sms
 from .auth_utils import login_with_otp_success
@@ -20,7 +24,7 @@ from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import PasswordResetOTP  # a model to store OTP temporarily
+from .models import PasswordResetOTP 
 import os
 otp = ""
 
@@ -35,23 +39,20 @@ def forgot_password_send_otp(request):
         return HttpResponse("Email is required", status=400)
 
     otp = str(random.randint(100000, 999999))
-    subject = f"Email verification code: {otp}"
+    subject = "E-mail verification"
     message = f'Your OTP is {otp}, please do not share it with anyone'
-    html_content = render_to_string("otp_email.html", {"otp": otp, "user_email": email})
     from_email = os.getenv('EMAIL_HOST_USER')
     recipient_list = [email]
 
     try:
-        # check user exists
         user = User.objects.get(email_address=email)
 
-        # store OTP in DB
         PasswordResetOTP.objects.update_or_create(
             user=user,
             defaults={"otp": otp}
         )
 
-        send_mail(subject, message, from_email, recipient_list, fail_silently=False, html_message=html_content)
+        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
         return HttpResponse("Email sent successfully!")
     except User.DoesNotExist:
         return HttpResponse("User not found.", status=404)
@@ -94,7 +95,6 @@ def forgot_password_reset(request):
     user.password = make_password(new_password)
     user.save()
 
-    # cleanup OTPs for this user
     PasswordResetOTP.objects.filter(user=user).delete()
 
     return Response({'message': 'Password reset successful.'}, status=status.HTTP_200_OK)
@@ -103,38 +103,31 @@ def forgot_password_reset(request):
 class UserSignupView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSignupSerializer
-    permission_classes = []  # anyone can sign up
-
-
+    permission_classes = []  
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import serializers
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    role = serializers.CharField(write_only=True)  # Accept role in request
-
+    role = serializers.CharField(write_only=True)
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        # Add custom claims
+
+        # extra fields you want in response
         token["full_name"] = user.full_name
         token["email_address"] = user.email_address
         token["role"] = user.role
         return token
 
     def validate(self, attrs):
-        # Get role from request
-        role = attrs.pop('role', None)
-
-        # First validate email/password
+        provided_role = attrs.get("role")
         data = super().validate(attrs)
-
-        # Check role matches
-        if role and self.user.role != role:
-            raise serializers.ValidationError({"role": "Invalid role for this user."})
-
-        # Add user info to response
+      
+        if provided_role.upper() != self.user.role.upper():
+            raise serializers.ValidationError({
+                "role": "Provided role does not match your account role."
+            })
         data.update({
             "user": {
                 "id": self.user.id,
@@ -143,9 +136,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 "role": self.user.role
             }
         })
-
         return data
-
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -157,30 +148,27 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         refresh = data.get("refresh")
         access = data.get("access")
 
-        # Set HttpOnly cookies
         response.set_cookie(
             key="access_token",
             value=access,
             httponly=True,
-            secure=True,   # set True in production
+            secure=False,   
             samesite="Strict",
-            max_age=300,    # 5 mins
+            max_age=300,    
         )
         response.set_cookie(
             key="refresh_token",
             value=refresh,
             httponly=True,
-            secure=True,
+            secure=False,
             samesite="Strict",
-            max_age=7*24*60*60,  # 7 days
+            max_age=7*24*60*60,  
         )
 
-        # Remove tokens from response body
         del response.data["access"]
         del response.data["refresh"]
 
         return response
-
 
 class CookieTokenRefreshView(APIView):
     def post(self, request):
@@ -199,7 +187,7 @@ class CookieTokenRefreshView(APIView):
                 httponly=True,
                 secure=False,
                 samesite="Strict",
-                max_age=300,   # 5 minutes
+                max_age=300,   
             )
             return response
 
@@ -221,6 +209,12 @@ class VerifyOTPView(APIView):
     def post(self, request):
         user_id = request.data.get("user_id")
         token = request.data.get("otp")
+        role = request.data.get("role")  
+        if role.upper() != user.role.upper():
+                return Response(
+                    {"error": "Provided role does not match your account role."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
         try:
             user = User.objects.get(id=user_id)
