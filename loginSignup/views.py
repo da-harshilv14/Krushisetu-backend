@@ -31,13 +31,6 @@ otp = ""
 
 User = get_user_model()
 
-import threading
-from django.core.mail import send_mail
-from django.conf import settings
-
-def send_otp_email(subject, message, recipient):
-    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [recipient], fail_silently=False)
-
 @api_view(['POST'])
 def forgot_password_send_otp(request):
     email = request.data.get('email')
@@ -50,17 +43,25 @@ def forgot_password_send_otp(request):
         return Response({"error": "User not found"}, status=404)
 
     otp = str(random.randint(100000, 999999))
-    PasswordResetOTP.objects.update_or_create(user=user, defaults={"otp": otp})
+    PasswordResetOTP.objects.update_or_create(
+        user=user,
+        defaults={"otp": otp}
+    )
 
     subject = "E-mail verification"
-    message = f'Your OTP is {otp}, please do not share it'
+    message = f'Your OTP is {otp}, please do not share it with anyone'
 
-    # Send email in background thread
-    threading.Thread(target=send_otp_email, args=(subject, message, email)).start()
-
-    return Response({"success": "Email sent (if valid)!"})
-
-
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False
+        )
+        return Response({"success": "Email sent successfully!"})
+    except Exception as e:
+        return Response({"error": f"Error sending email: {e}"}, status=500) 
 
 @api_view(['POST'])
 def forgot_password_verify_otp(request):
