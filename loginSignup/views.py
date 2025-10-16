@@ -33,31 +33,35 @@ User = get_user_model()
 
 @api_view(['POST'])
 def forgot_password_send_otp(request):
-    load_dotenv()
     email = request.data.get('email')
     if not email:
-        return HttpResponse("Email is required", status=400)
-
-    otp = str(random.randint(100000, 999999))
-    subject = "E-mail verification"
-    message = f'Your OTP is {otp}, please do not share it with anyone'
-    from_email = os.getenv('EMAIL_HOST_USER')
-    recipient_list = [email]
+        return Response({"error": "Email is required"}, status=400)
 
     try:
         user = User.objects.get(email_address=email)
-
-        PasswordResetOTP.objects.update_or_create(
-            user=user,
-            defaults={"otp": otp}
-        )
-
-        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
-        return HttpResponse("Email sent successfully!")
     except User.DoesNotExist:
-        return HttpResponse("User not found.", status=404)
+        return Response({"error": "User not found"}, status=404)
+
+    otp = str(random.randint(100000, 999999))
+    PasswordResetOTP.objects.update_or_create(
+        user=user,
+        defaults={"otp": otp}
+    )
+
+    subject = "E-mail verification"
+    message = f'Your OTP is {otp}, please do not share it with anyone'
+
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False
+        )
+        return Response({"success": "Email sent successfully!"})
     except Exception as e:
-        return HttpResponse(f"Error sending email: {e}", status=500)
+        return Response({"error": f"Error sending email: {e}"}, status=500)
 
 @api_view(['POST'])
 def forgot_password_verify_otp(request):
