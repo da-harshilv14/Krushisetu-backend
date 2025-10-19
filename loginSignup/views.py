@@ -107,34 +107,19 @@ class UserSignupView(generics.CreateAPIView):
 
 
 
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import serializers
-
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    role = serializers.CharField(write_only=True)  # Accept role in request
-
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        # Add custom claims
+
+        # extra fields you want in response
         token["full_name"] = user.full_name
         token["email_address"] = user.email_address
         token["role"] = user.role
         return token
 
     def validate(self, attrs):
-        # Get role from request
-        role = attrs.pop('role', None)
-
-        # First validate email/password
         data = super().validate(attrs)
-
-        # Check role matches
-        if role and self.user.role != role:
-            raise serializers.ValidationError({"role": "Invalid role for this user."})
-
-        # Add user info to response
         data.update({
             "user": {
                 "id": self.user.id,
@@ -143,44 +128,53 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 "role": self.user.role
             }
         })
-
         return data
-
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
+        remember_me = request.data.get("remember", False)  # get from request body
         response = super().post(request, *args, **kwargs)
         data = response.data
 
         refresh = data.get("refresh")
         access = data.get("access")
 
+        # Set default expiry
+        access_max_age = 300  # 5 minutes
+        refresh_max_age = 7*24*60*60  # 7 days
+
+        # Extend expiry if remember_me is checked
+        if remember_me:
+            print("working")
+            access_max_age = 60*60*24  # 1 day
+            refresh_max_age = 30*24*60*60  # 30 days
+
         # Set HttpOnly cookies
         response.set_cookie(
             key="access_token",
             value=access,
             httponly=True,
-            secure=True,   # set True in production
+            secure=False,   # ❌ set True in production with HTTPS
             samesite="Strict",
-            max_age=300,    # 5 mins
+            max_age=access_max_age,    # 5 mins
         )
+
         response.set_cookie(
             key="refresh_token",
             value=refresh,
             httponly=True,
-            secure=True,
+            secure=False,
             samesite="Strict",
-            max_age=7*24*60*60,  # 7 days
+            max_age=refresh_max_age,  # 7 days
         )
 
-        # Remove tokens from response body
+        # You can remove tokens from response body if you want
         del response.data["access"]
         del response.data["refresh"]
 
         return response
-
 
 class CookieTokenRefreshView(APIView):
     def post(self, request):
@@ -221,11 +215,44 @@ class VerifyOTPView(APIView):
     def post(self, request):
         user_id = request.data.get("user_id")
         token = request.data.get("otp")
+        remember = request.data.get("remember", False)  # new
 
         try:
             user = User.objects.get(id=user_id)
             if verify_otp_sms(user, token):
-                return login_with_otp_success(user)
+                # Generate JWT tokens
+                refresh = RefreshToken.for_user(user)
+                access = str(refresh.access_token)
+                refresh_token = str(refresh)
+
+                # Set token lifetimes
+                access_max_age = 300  # 5 minutes
+                refresh_max_age = 7*24*60*60  # 7 days
+
+                if remember:
+                    access_max_age = 60*60*24  # 1 day
+                    refresh_max_age = 30*24*60*60  # 30 days
+
+                response = Response({"message": "Login successful"}, status=status.HTTP_200_OK)
+                response.set_cookie(
+                    key="access_token",
+                    value=access,
+                    httponly=True,
+                    secure=False,  # True in production
+                    samesite="Strict",
+                    max_age=access_max_age,
+                )
+                response.set_cookie(
+                    key="refresh_token",
+                    value=refresh_token,
+                    httponly=True,
+                    secure=False,
+                    samesite="Strict",
+                    max_age=refresh_max_age,
+                )
+
+                return response
+
             else:
                 return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:

@@ -1,34 +1,32 @@
 from django.db import models
+from django.conf import settings
+from phonenumber_field.modelfields import PhoneNumberField
 
-class Farmer(models.Model):
-    full_name = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=15)
-    email = models.EmailField(unique=True)
-    aadhar_number = models.CharField(max_length=12, unique=True)
-    state = models.CharField(max_length=50)
-    district = models.CharField(max_length=50)
-    taluka = models.CharField(max_length=50)
-    village = models.CharField(max_length=50)
-    address = models.TextField()
-    photo = models.ImageField(upload_to="profile_photos/", null=True, blank=True)
+class UserProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
+
+    # 🏡 Personal Info
+    aadhaar_number = models.CharField(max_length=12, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    district = models.CharField(max_length=100, blank=True, null=True)
+    taluka = models.CharField(max_length=100, blank=True, null=True)
+    village = models.CharField(max_length=100, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    photo = models.ImageField(upload_to="documents/profile_photos/", blank=True, null=True)
+
+    # 🏞️ Land Info
+    land_size = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    unit = models.CharField(max_length=20, blank=True, null=True)
+    soil_type = models.CharField(max_length=100, blank=True, null=True)
+    ownership_type = models.CharField(max_length=20, blank=True, null=True)
+    land_proof = models.FileField(upload_to="documents/land_proofs/", blank=True, null=True)
+
+    # 🏦 Bank & ID Info
+    bank_account_number = models.CharField(max_length=20, blank=True, null=True)
+    ifsc_code = models.CharField(max_length=15, blank=True, null=True)
+    bank_name = models.CharField(max_length=100, blank=True, null=True)
+    pan_card = models.FileField(upload_to="documents/pan_cards/", blank=True, null=True)
+    aadhaar_card = models.FileField(upload_to="documents/aadhaar_cards/", blank=True, null=True)
 
     def __str__(self):
-        return self.full_name
-
-
-class LandDetail(models.Model):
-    farmer = models.OneToOneField(Farmer, on_delete=models.CASCADE, related_name="land")
-    total_land_size = models.DecimalField(max_digits=10, decimal_places=2)
-    soil_type = models.CharField(max_length=50)
-    ownership_type = models.CharField(max_length=50)
-    ownership_proof = models.FileField(upload_to="land_docs/", null=True, blank=True)
-
-
-class BankDetail(models.Model):
-    farmer = models.OneToOneField(Farmer, on_delete=models.CASCADE, related_name="bank")
-    bank_account_number = models.CharField(max_length=20)
-    ifsc_code = models.CharField(max_length=15)
-    bank_name = models.CharField(max_length=100)
-    pan_card = models.CharField(max_length=10)
-    aadhar_card = models.CharField(max_length=12)
-
+        return f"{self.user.full_name}'s Profile"

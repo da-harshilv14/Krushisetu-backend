@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-r@0q!s@*@_r(0d)v^4()ej4-kipbw5&q^u@zs4rt+goiraknv!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -93,9 +93,11 @@ TEMPLATES = [
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-   
-    "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
-    "https://krushisetu-backend-production-4a02.up.railway.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:8000",
+    "https://krushisetufrontend.vercel.app",
+    # "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
+    # "https://krushisetu-backend-production-4a02.up.railway.app",
 ]
 
 # If testing, you can allow all (not safe for prod)
@@ -107,7 +109,9 @@ CORS_ALLOW_HEADERS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
+    "http://localhost:5173/",
+    "https://krushisetufrontend.vercel.app/",
+    # "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
 ]
 WSGI_APPLICATION = 'back.wsgi.application'
 
@@ -193,3 +197,7 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')    
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER 
+
+# settings.py
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

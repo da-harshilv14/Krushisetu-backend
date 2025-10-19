@@ -1,23 +1,7 @@
-# Register your models here.
+# app/admin.py
 from django.contrib import admin
-from .models import Farmer, LandDetail, BankDetail
+from .models import UserProfile
 
-class LandInline(admin.StackedInline):
-    model = LandDetail
-    extra = 0
-    can_delete = False
-
-class BankInline(admin.StackedInline):
-    model = BankDetail
-    extra = 0
-    can_delete = False
-
-@admin.register(Farmer)
-class FarmerAdmin(admin.ModelAdmin):
-    list_display = ("full_name","phone_number","aadhar_number","district","village")
-    search_fields = ("full_name","aadhar_number","phone_number","email")
-    inlines = [LandInline, BankInline]
-
-admin.site.register(LandDetail)
-admin.site.register(BankDetail)
-
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ["user", "state", "district", "bank_name"]
