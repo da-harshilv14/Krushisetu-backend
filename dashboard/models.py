@@ -12,7 +12,6 @@ class UserProfile(models.Model):
     taluka = models.CharField(max_length=100, blank=True, null=True)
     village = models.CharField(max_length=100, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
-    photo = models.ImageField(upload_to="documents/profile_photos/", blank=True, null=True)
 
     # 🏞️ Land Info
     land_size = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
