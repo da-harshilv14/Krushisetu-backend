@@ -8,5 +8,3 @@ urlpatterns = [
     path("profile/", UserProfileView.as_view(), name="user-profile"),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

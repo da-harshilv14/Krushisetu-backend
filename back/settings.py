@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+from corsheaders.defaults import default_headers
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -62,16 +62,16 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",  
     "django.middleware.common.CommonMiddleware",
-    'django_otp.middleware.OTPMiddleware',
+    "django_otp.middleware.OTPMiddleware",
 ]
 
 ROOT_URLCONF = 'back.urls'
@@ -102,15 +102,16 @@ CORS_ALLOWED_ORIGINS = [
 
 # If testing, you can allow all (not safe for prod)
 CORS_ALLOW_ALL_ORIGINS = True
-
-CORS_ALLOW_HEADERS = [
-    "content-type",
-    "authorization",
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "Authorization",
+    "Content-Type",
 ]
 
+
+
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173/",
-    "https://krushisetufrontend.vercel.app/",
+    "http://localhost:5173",
+    "https://krushisetufrontend.vercel.app",
     # "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
 ]
 WSGI_APPLICATION = 'back.wsgi.application'

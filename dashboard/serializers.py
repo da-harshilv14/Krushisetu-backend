@@ -11,9 +11,31 @@ class UserProfileSerializer(serializers.ModelSerializer):
     mobile_number = PhoneNumberField(source="user.mobile_number", read_only=True)
 
     # Optional image upload field (editable)
-    photo = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = UserProfile
-        fields = "__all__"
+        fields = [
+            "aadhaar_number",
+            "state",
+            "district",
+            "taluka",
+            "village",
+            "address",
+            "photo",
+            "land_size",
+            "unit",
+            "soil_type",
+            "ownership_type",
+            "land_proof",
+            "bank_account_number",
+            "ifsc_code",
+            "bank_name",
+            "pan_card",
+            "aadhaar_card",
+            "full_name",
+            "email_address",
+            "role",
+            "mobile_number",
+        ]
+        
         read_only_fields = ["user"]
