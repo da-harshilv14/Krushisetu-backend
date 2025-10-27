@@ -93,11 +93,11 @@ TEMPLATES = [
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "https://krushisetu-backend-production-4a02.up.railway.app",
-    "http://localhost:5173",
-    "http://127.0.0.1:8000",
-    "https://krushisetufrontend.vercel.app",
-    # "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
+   "https://krushisetu-backend-production-4a02.up.railway.app",
+    # "http://localhost:5173",
+    # "http://127.0.0.1:8000",
+  #  "https://krushisetufrontend.vercel.app",
+   "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
     # "https://krushisetu-backend-production-4a02.up.railway.app",
 ]
 
@@ -111,9 +111,9 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "https://krushisetufrontend.vercel.app",
-    # "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
+    # "http://localhost:5173",
+    #"https://krushisetufrontend.vercel.app",
+    "https://krushi-setu-htmwj4wp2-jainil-s-projects.vercel.app",
 ]
 WSGI_APPLICATION = 'back.wsgi.application'
 
