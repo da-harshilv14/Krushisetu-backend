@@ -36,6 +36,7 @@ class OfficerPendingApprovalsListView(generics.ListAPIView):
     def get_queryset(self):
         return (
             UserProfile.objects.select_related("user", "subsidy_approval")
+            .filter(user__role="farmer")
             .filter(subsidy_approval__status=SubsidyApproval.STATUS_PENDING)
             .order_by("user__full_name")
         )
@@ -46,7 +47,10 @@ class OfficerProfileReviewView(generics.RetrieveUpdateAPIView):
     lookup_field = "pk"
 
     def get_queryset(self):
-        return UserProfile.objects.select_related("user", "subsidy_approval")
+        return (
+            UserProfile.objects.select_related("user", "subsidy_approval")
+            .filter(user__role="farmer")
+        )
 
     def get_serializer_class(self):
         if self.request.method in ("PUT", "PATCH"):
