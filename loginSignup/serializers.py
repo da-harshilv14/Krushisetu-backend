@@ -1,10 +1,24 @@
 from rest_framework import serializers
 from .models import User
 
+
 class UserSignupSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(
+        choices=User.ROLE_CHOICES,
+        default="farmer",
+        required=False,
+    )
+
     class Meta:
         model = User
-        fields = ["full_name", "email_address", "mobile_number", "aadhaar_number", "password"]
+        fields = [
+            "full_name",
+            "email_address",
+            "mobile_number",
+            "aadhaar_number",
+            "password",
+            "role",
+        ]
         extra_kwargs = {"password": {"write_only": True}}
 
     def validate(self, data):

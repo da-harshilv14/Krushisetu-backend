@@ -154,12 +154,15 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             refresh_max_age = 30*24*60*60  # 30 days
 
         # Set HttpOnly cookies
+        secure_cookie = not settings.DEBUG
+        cookie_samesite = "None" if secure_cookie else "Lax"
+
         response.set_cookie(
             key="access_token",
             value=access,
             httponly=True,
-            secure=True,   # ❌ set True in production with HTTPS
-            samesite="None",
+            secure=secure_cookie,
+            samesite=cookie_samesite,
             max_age=access_max_age,    # 5 mins
         )
 
@@ -167,8 +170,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             key="refresh_token",
             value=refresh,
             httponly=True,
-            secure=True,
-            samesite="None",
+            secure=secure_cookie,
+            samesite=cookie_samesite,
             max_age=refresh_max_age,  # 7 days
         )
 
@@ -185,6 +188,8 @@ class CookieTokenRefreshView(APIView):
             return Response({"error": "No refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
+            secure_cookie = not settings.DEBUG
+            cookie_samesite = "None" if secure_cookie else "Lax"
             refresh = RefreshToken(refresh_token)
             access = str(refresh.access_token)
 
@@ -193,8 +198,8 @@ class CookieTokenRefreshView(APIView):
                 key="access_token",
                 value=access,
                 httponly=True,
-                secure=True,
-                samesite="None",
+                secure=secure_cookie,
+                samesite=cookie_samesite,
                 max_age=300,   
             )
             return response
@@ -235,21 +240,24 @@ class VerifyOTPView(APIView):
                     access_max_age = 60*60*24  # 1 day
                     refresh_max_age = 30*24*60*60  # 30 days
 
+                secure_cookie = not settings.DEBUG
+                cookie_samesite = "None" if secure_cookie else "Lax"
+
                 response = Response({"message": "Login successful"}, status=status.HTTP_200_OK)
                 response.set_cookie(
                     key="access_token",
                     value=access,
                     httponly=True,
-                    secure=True,  # True in production
-                    samesite="None",
+                    secure=secure_cookie,  # True in production, relaxed in DEBUG
+                    samesite=cookie_samesite,
                     max_age=access_max_age,
                 )
                 response.set_cookie(
                     key="refresh_token",
                     value=refresh_token,
                     httponly=True,
-                    secure=True,
-                    samesite="None",
+                    secure=secure_cookie,
+                    samesite=cookie_samesite,
                     max_age=refresh_max_age,
                 )
 
