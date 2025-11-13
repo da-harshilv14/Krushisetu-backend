@@ -84,13 +84,15 @@ class SubsidyApprovalActionSerializer(serializers.Serializer):
         choices=[
             SubsidyApproval.STATUS_APPROVED,
             SubsidyApproval.STATUS_REJECTED,
-        ]
+        ],
+        write_only=True,
     )
     remarks = serializers.CharField(
         required=False,
         allow_blank=True,
         allow_null=True,
         max_length=1000,
+        write_only=True,
     )
 
     def validate_status(self, value):
